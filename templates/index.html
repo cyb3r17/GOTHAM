@@ -1,0 +1,533 @@
+{% extends "base.html" %}
+{% block title %} · SOCMINT{% endblock %}
+
+{% block content %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  html, body { overflow-x: hidden; }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    min-height: calc(100vh / 1.33);
+    background-image: url('/static/background.png');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.15) 0%,
+      rgba(0,0,0,0.0)  30%,
+      rgba(0,0,0,0.55) 65%,
+      rgba(0,0,0,0.92) 100%
+    );
+  }
+  .info-strips {
+    position: relative;
+    display: flex; align-items: flex-end;
+    padding: 0 44px 104px; gap: 0;
+  }
+  .info-block {
+    border-left: 1px solid rgba(255,255,255,0.25);
+    padding: 0 24px 0 16px; min-width: 130px;
+  }
+  .info-label {
+    font-size: 9px; font-weight: 500; letter-spacing: 0.14em;
+    text-transform: uppercase; color: rgba(255,255,255,0.45); line-height: 1.7;
+  }
+  .hero-title {
+    position: relative;
+    font-size: clamp(96px, 14vw, 180px);
+    font-weight: 900; letter-spacing: -0.02em; line-height: 0.85;
+    padding: 0 32px 22px; user-select: none;
+  }
+
+  /* ── SHARED ── */
+  .below { background: #080808; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ── BRIEF STRIP ── */
+  .brief {
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    padding: 36px 60px;
+    display: grid; grid-template-columns: 180px 1fr 1fr;
+    gap: 60px; align-items: start;
+  }
+  .brief-tag {
+    font-size: 8px; font-weight: 700; letter-spacing: 0.22em;
+    text-transform: uppercase; color: rgba(255,255,255,0.25);
+    font-family: 'JetBrains Mono', monospace; padding-top: 3px;
+  }
+  .brief-body {
+    font-size: 13px; line-height: 1.7; color: rgba(255,255,255,0.55);
+    border-left: 1px solid rgba(255,255,255,0.08); padding-left: 28px;
+  }
+  .brief-metrics {
+    border-left: 1px solid rgba(255,255,255,0.08); padding-left: 28px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .bm-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;
+  }
+  .bm-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .bm-label { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.28); }
+  .bm-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: rgba(255,255,255,0.7); }
+
+  /* ── TILTED SHOWCASE ── */
+  .tilt-section {
+    padding: 80px 0 40px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    overflow: hidden; position: relative;
+  }
+  .tilt-header {
+    padding: 0 60px 60px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: end;
+  }
+  .tilt-title {
+    font-size: clamp(26px, 2.8vw, 42px); font-weight: 700;
+    letter-spacing: -0.02em; color: #f0ede6; line-height: 1.1;
+  }
+  .tilt-desc {
+    font-size: 13px; line-height: 1.7; color: rgba(255,255,255,0.38);
+    padding-top: 6px;
+  }
+  .tilt-stage {
+    position: relative; height: 480px; margin: 0 60px;
+  }
+  .tilt-card {
+    position: absolute;
+    border: 1px solid rgba(255,255,255,0.1);
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.03);
+  }
+  .tilt-card img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .tilt-card-label {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 8px 12px;
+    background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase; color: rgba(255,255,255,0.4);
+    border-top: 1px solid rgba(255,255,255,0.07);
+  }
+  .tc-1 {
+    width: 55%; height: 340px;
+    left: 0; top: 60px;
+    transform: rotate(-6deg);
+    z-index: 1;
+  }
+  .tc-2 {
+    width: 52%; height: 320px;
+    left: 28%; top: 20px;
+    transform: rotate(3deg);
+    z-index: 2;
+  }
+  .tc-3 {
+    width: 42%; height: 290px;
+    right: 0; top: 100px;
+    transform: rotate(-2deg);
+    z-index: 3;
+  }
+
+  /* ── DENSE FEATURES ── */
+  .dense-features {
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .df-header {
+    padding: 52px 60px 0;
+    display: flex; align-items: baseline; gap: 20px;
+  }
+  .df-eyebrow {
+    font-size: 8px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+    color: rgba(255,255,255,0.22); font-family: 'JetBrains Mono', monospace;
+  }
+  .df-rule { flex: 1; height: 1px; background: rgba(255,255,255,0.07); }
+  .df-count {
+    font-size: 8px; font-family: 'JetBrains Mono', monospace;
+    color: rgba(255,255,255,0.2); letter-spacing: 0.1em;
+  }
+  .df-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+  }
+  .df-item {
+    padding: 32px 60px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    border-right: 1px solid rgba(255,255,255,0.06);
+    display: grid; grid-template-columns: 28px 1fr; gap: 18px;
+    transition: background .2s;
+  }
+  .df-item:nth-child(even) { border-right: none; }
+  .df-item:hover { background: rgba(255,255,255,0.015); }
+  .df-num {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    color: rgba(255,255,255,0.2); padding-top: 3px;
+  }
+  .df-content {}
+  .df-title { font-size: 13px; font-weight: 600; color: #e4e2da; margin-bottom: 6px; }
+  .df-body  { font-size: 12px; line-height: 1.65; color: rgba(255,255,255,0.33); }
+  .df-tags  { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+  .df-tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 8px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 2px 7px; border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.25);
+  }
+
+  /* ── SATELLITE SECTION ── */
+  .sat-section {
+    position: relative; overflow: hidden;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .sat-bg {
+    position: absolute; inset: 0;
+    background-image: url('/static/thesat.jpg');
+    background-size: cover; background-position: center 30%;
+    filter: brightness(0.28) saturate(0.6);
+  }
+  .sat-inner {
+    position: relative; z-index: 1;
+    padding: 80px 60px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+  }
+  .sat-left {}
+  .sat-overline {
+    font-family: 'JetBrains Mono', monospace; font-size: 8px;
+    font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(255,255,255,0.3); margin-bottom: 18px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sat-overline::before {
+    content: ''; display: block; width: 20px; height: 1px;
+    background: rgba(255,255,255,0.25);
+  }
+  .sat-title {
+    font-size: clamp(28px, 3vw, 48px); font-weight: 700;
+    letter-spacing: -0.02em; color: #f0ede6; line-height: 1.1; margin-bottom: 20px;
+  }
+  .sat-body { font-size: 13px; line-height: 1.75; color: rgba(255,255,255,0.45); }
+  .sat-right {
+    display: flex; flex-direction: column; gap: 0;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(0,0,0,0.4); backdrop-filter: blur(8px);
+  }
+  .sat-step {
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: start;
+  }
+  .sat-step:last-child { border-bottom: none; }
+  .sat-step-n {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    color: rgba(255,255,255,0.2); padding-top: 2px;
+  }
+  .sat-step-title { font-size: 12px; font-weight: 600; color: #d8d4cc; margin-bottom: 3px; }
+  .sat-step-desc  { font-size: 11px; line-height: 1.6; color: rgba(255,255,255,0.3); }
+
+  /* ── DENSE FOOTER GRID ── */
+  .info-footer {
+    padding: 48px 60px 40px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+  }
+  .if-col {
+    padding: 0 32px 0 0;
+    border-right: 1px solid rgba(255,255,255,0.06);
+    margin-right: 32px;
+  }
+  .if-col:last-child { border-right: none; margin-right: 0; padding-right: 0; }
+  .if-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 8px;
+    font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(255,255,255,0.2); margin-bottom: 14px;
+    padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .if-items { display: flex; flex-direction: column; gap: 6px; }
+  .if-item { font-size: 11px; color: rgba(255,255,255,0.38); line-height: 1.5; }
+  .if-item strong { color: rgba(255,255,255,0.65); font-weight: 500; }
+
+  /* ── CTA ── */
+  .hp-cta-section {
+    padding: 80px 60px;
+    display: flex; align-items: center; justify-content: space-between; gap: 40px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .cta-left {}
+  .cta-tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 8px;
+    font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(255,255,255,0.2); margin-bottom: 12px;
+  }
+  .cta-h {
+    font-size: clamp(24px, 2.5vw, 40px); font-weight: 700;
+    letter-spacing: -0.02em; color: #f0ede6; line-height: 1.1;
+  }
+  .cta-right { display: flex; gap: 12px; flex-shrink: 0; }
+  .btn-primary {
+    font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    background: #e4e2da; color: #080808;
+    padding: 12px 28px; text-decoration: none; transition: opacity .15s;
+    white-space: nowrap;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-secondary {
+    font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    background: transparent; color: rgba(255,255,255,0.45);
+    border: 1px solid rgba(255,255,255,0.14);
+    padding: 12px 28px; text-decoration: none; transition: color .15s, border-color .15s;
+    white-space: nowrap;
+  }
+  .btn-secondary:hover { color: #e4e2da; border-color: rgba(255,255,255,0.3); }
+
+  /* ── SITE FOOTER ── */
+  .site-footer {
+    padding: 24px 60px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .sf-logo {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.2em;
+    text-transform: uppercase; color: rgba(255,255,255,0.18);
+  }
+  .sf-note {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    letter-spacing: 0.1em; color: rgba(255,255,255,0.12); text-transform: uppercase;
+  }
+</style>
+
+<!-- ── HERO ── -->
+<main class="hero">
+  <div class="info-strips">
+    <div class="info-block"><div class="info-label">You Are<br>Now<br>Entering</div></div>
+    <div class="info-block"><div class="info-label">Social Media<br>Intelligence<br>Platform</div></div>
+    <div class="info-block"><div class="info-label">The Operating<br>System For<br>Global Decision<br>Making</div></div>
+    <div class="info-block"><div class="info-label">OSINT · Signal<br>Graph · Identity<br>Analysis</div></div>
+  </div>
+  <div class="hero-title">Gotham</div>
+</main>
+
+<div class="below">
+
+  <!-- ── BRIEF ── -->
+  <div class="brief">
+    <div class="brief-tag">Platform Overview</div>
+    <div class="brief-body">
+      Gotham maps every account, email, location, and web trace connected to a target identity.
+      Three OSINT sources run in parallel — Maigret, Sherlock, DuckDuckGo dorking — and each result
+      is verified by HTTP checks and Gemini 2.5 Flash visual classification before it reaches the graph.
+      What remains is signal, not noise.
+    </div>
+    <div class="brief-metrics">
+      <div class="bm-row"><span class="bm-label">Platforms scanned</span><span class="bm-val">500+</span></div>
+      <div class="bm-row"><span class="bm-label">Parallel collectors</span><span class="bm-val">3</span></div>
+      <div class="bm-row"><span class="bm-label">HTTP workers</span><span class="bm-val">40</span></div>
+      <div class="bm-row"><span class="bm-label">AI model</span><span class="bm-val">Gemini 2.5 Flash</span></div>
+      <div class="bm-row"><span class="bm-label">Output</span><span class="bm-val">Graph + PDF</span></div>
+    </div>
+  </div>
+
+  <!-- ── TILTED SHOWCASE ── -->
+  <section class="tilt-section">
+    <div class="tilt-header">
+      <h2 class="tilt-title">Graph-first<br>intelligence.</h2>
+      <p class="tilt-desc">
+        Every discovered account, email, domain, and dork result becomes a node.
+        Edges encode the relationship. The graph tells the story.
+        Click any node to see its full metadata — avatar, rank, profile IDs, linked domains.
+      </p>
+    </div>
+    <div class="tilt-stage">
+      <div class="tilt-card tc-1">
+        <img src="/static/Screenshot_20260704_174235-1.png" alt="Graph view"/>
+        <div class="tilt-card-label">Investigation · Force Graph · Platform Nodes</div>
+      </div>
+      <div class="tilt-card tc-2">
+        <img src="/static/Screenshot_20260704_230552.png" alt="Node detail"/>
+        <div class="tilt-card-label">Node Detail · Profile Metadata · Connections</div>
+      </div>
+      <div class="tilt-card tc-3">
+        <img src="static/Screenshot_20260705_042136.png" alt="Collection layer" style="filter:brightness(0.7) saturate(0.5)"/>
+        <div class="tilt-card-label">Collection Layer · Multi-Source · Verified</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── DENSE FEATURES ── -->
+  <section class="dense-features">
+    <div class="df-header">
+      <span class="df-eyebrow">Capabilities</span>
+      <div class="df-rule"></div>
+      <span class="df-count mono">06 modules</span>
+    </div>
+    <div class="df-grid">
+      <div class="df-item">
+        <span class="df-num">01</span>
+        <div class="df-content">
+          <div class="df-title">Force-Directed Graph</div>
+          <div class="df-body">Usernames, platforms, emails, locations, domains, and dork results rendered as an interactive D3 knowledge graph. Drag nodes, zoom into clusters, click for full metadata. The dork cluster sits spatially separated from the main identity graph.</div>
+          <div class="df-tags"><span class="df-tag">D3.js</span><span class="df-tag">Force Layout</span><span class="df-tag">HTMX</span></div>
+        </div>
+      </div>
+      <div class="df-item">
+        <span class="df-num">02</span>
+        <div class="df-content">
+          <div class="df-title">Parallel OSINT Collection</div>
+          <div class="df-body">Maigret scans 500+ platforms for username presence and extracts structured profile metadata — IDs, emails, locations, linked domains, site rank, category tags. Sherlock runs concurrently as a cross-validation layer. Results are merged into a unified graph.</div>
+          <div class="df-tags"><span class="df-tag">Maigret</span><span class="df-tag">Sherlock</span><span class="df-tag">Concurrent</span></div>
+        </div>
+      </div>
+      <div class="df-item">
+        <span class="df-num">03</span>
+        <div class="df-content">
+          <div class="df-title">Dork Intelligence Cluster</div>
+          <div class="df-body">Eight DuckDuckGo query templates target pastes, code repositories, breach mentions, forum registrations, social links, professional profiles, and general web traces. Results filtered for username relevance, deduplicated by domain, rendered as a colour-coded satellite cluster.</div>
+          <div class="df-tags"><span class="df-tag">DuckDuckGo</span><span class="df-tag">8 Templates</span><span class="df-tag">Category-Coloured</span></div>
+        </div>
+      </div>
+      <div class="df-item">
+        <span class="df-num">04</span>
+        <div class="df-content">
+          <div class="df-title">HTTP Verification Pass</div>
+          <div class="df-body">40 concurrent HTTP workers check every discovered platform URL. Definitive 404 responses are pruned immediately. Timeouts and connection errors are treated as alive — only confirmed dead pages are removed. Runs as the second stage of the pipeline before AI screening.</div>
+          <div class="df-tags"><span class="df-tag">40 Workers</span><span class="df-tag">HEAD + GET</span><span class="df-tag">404 Pruning</span></div>
+        </div>
+      </div>
+      <div class="df-item">
+        <span class="df-num">05</span>
+        <div class="df-content">
+          <div class="df-title">AI Visual Screening</div>
+          <div class="df-body">A pool of three pre-started Firefox instances screenshots surviving platform pages concurrently. Each screenshot is sent to Gemini 2.5 Flash with the URL and username context. Login walls, wrong users, empty accounts, and unrelated pages are removed at medium-to-high confidence. Low-confidence results are kept.</div>
+          <div class="df-tags"><span class="df-tag">Gemini 2.5 Flash</span><span class="df-tag">Selenium Pool</span><span class="df-tag">Multimodal</span></div>
+        </div>
+      </div>
+      <div class="df-item">
+        <span class="df-num">06</span>
+        <div class="df-content">
+          <div class="df-title">PDF Intelligence Report</div>
+          <div class="df-body">Five-page structured PDF: cover with subject and stats, platform intelligence table sorted by global rank, identity and artifact summary (usernames, emails, locations, domains), dork intelligence section, and methodology. Generated on demand from the dashboard with one click.</div>
+          <div class="df-tags"><span class="df-tag">fpdf2</span><span class="df-tag">5 Pages</span><span class="df-tag">Dark Theme</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SATELLITE / PIPELINE ── -->
+  <section class="sat-section">
+    <div class="sat-bg"></div>
+    <div class="sat-inner">
+      <div class="sat-left">
+        <div class="sat-overline">Pipeline</div>
+        <h2 class="sat-title">From username<br>to intelligence<br>in minutes.</h2>
+        <p class="sat-body">
+          Three independent OSINT pipelines run concurrently the moment you submit a username.
+          Noise is filtered in two automated passes — HTTP and AI — before anything reaches the graph.
+          What you see is verified, structured, and ready to export.
+        </p>
+      </div>
+      <div class="sat-right">
+        <div class="sat-step">
+          <span class="sat-step-n">01</span>
+          <div>
+            <div class="sat-step-title">Parallel Collection</div>
+            <div class="sat-step-desc">Maigret + Sherlock + DuckDuckGo dorking run simultaneously via ThreadPoolExecutor. Results are merged into a single graph write.</div>
+          </div>
+        </div>
+        <div class="sat-step">
+          <span class="sat-step-n">02</span>
+          <div>
+            <div class="sat-step-title">HTTP Verification</div>
+            <div class="sat-step-desc">40 concurrent workers send HEAD/GET requests to every discovered URL. Definitive 404s are removed immediately.</div>
+          </div>
+        </div>
+        <div class="sat-step">
+          <span class="sat-step-n">03</span>
+          <div>
+            <div class="sat-step-title">AI Visual Classification</div>
+            <div class="sat-step-desc">Browser pool screenshots up to 25 platform pages. Gemini classifies each one. Login walls, error pages, wrong users removed at medium+ confidence.</div>
+          </div>
+        </div>
+        <div class="sat-step">
+          <span class="sat-step-n">04</span>
+          <div>
+            <div class="sat-step-title">Graph Commit + Export</div>
+            <div class="sat-step-desc">Verified results are committed to SQLite and rendered in D3. Download the complete picture as a structured PDF report.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── DENSE INFO GRID ── -->
+  <div class="info-footer">
+    <div class="if-col">
+      <div class="if-label">Collection</div>
+      <div class="if-items">
+        <div class="if-item"><strong>Maigret</strong> — 500+ platform scan</div>
+        <div class="if-item"><strong>Sherlock</strong> — cross-validation</div>
+        <div class="if-item"><strong>DuckDuckGo</strong> — 8 dork templates</div>
+        <div class="if-item"><strong>Parallel</strong> — all sources concurrent</div>
+        <div class="if-item"><strong>Timeout</strong> — 5s per site, 120s total</div>
+      </div>
+    </div>
+    <div class="if-col">
+      <div class="if-label">Verification</div>
+      <div class="if-items">
+        <div class="if-item"><strong>40</strong> concurrent HTTP workers</div>
+        <div class="if-item"><strong>HEAD</strong> → GET fallback on 405</div>
+        <div class="if-item"><strong>404</strong> only — all else kept</div>
+        <div class="if-item"><strong>Gemini 2.5 Flash</strong> visual classify</div>
+        <div class="if-item"><strong>3-browser</strong> pool, concurrent</div>
+      </div>
+    </div>
+    <div class="if-col">
+      <div class="if-label">Graph</div>
+      <div class="if-items">
+        <div class="if-item"><strong>Node types</strong> — 7 distinct</div>
+        <div class="if-item"><strong>Dork cluster</strong> — spatially isolated</div>
+        <div class="if-item"><strong>Edge labels</strong> — relationship encoded</div>
+        <div class="if-item"><strong>D3 v7</strong> force-directed layout</div>
+        <div class="if-item"><strong>SQLite</strong> persistent storage</div>
+      </div>
+    </div>
+    <div class="if-col">
+      <div class="if-label">Output</div>
+      <div class="if-items">
+        <div class="if-item"><strong>PDF</strong> — 5-page structured report</div>
+        <div class="if-item"><strong>Cover</strong> — subject, stats, timestamp</div>
+        <div class="if-item"><strong>Platforms</strong> — ranked table</div>
+        <div class="if-item"><strong>Identity</strong> — emails, locations, domains</div>
+        <div class="if-item"><strong>Dork hits</strong> — with snippets</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CTA ── -->
+  <div class="hp-cta-section">
+    <div class="cta-left">
+      <div class="cta-tag">Gotham · SOCMINT Intelligence Platform</div>
+      <h2 class="cta-h">Start mapping identities.</h2>
+    </div>
+    <div class="cta-right">
+      <a href="/dashboard" class="btn-primary">Open Dashboard</a>
+      {% if not session.user %}
+      <a href="/register" class="btn-secondary">Create Account</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <div class="site-footer">
+    <span class="sf-logo">Gotham</span>
+    <span class="sf-note">OSINT · Signal Graph · Identity Analysis</span>
+  </div>
+
+</div>
+{% endblock %}

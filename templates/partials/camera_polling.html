@@ -1,0 +1,11 @@
+<div hx-get="/api/camera-status/{{ task_id }}"
+     hx-trigger="every 2s"
+     hx-target="#sweep-status"
+     hx-swap="outerHTML"
+     style="display:flex;align-items:center;gap:8px;">
+  <span style="width:6px;height:6px;border-radius:50%;background:#22d3ee;flex-shrink:0;
+               animation:pulse-dot 1.4s ease-in-out infinite;display:inline-block;"></span>
+  <span style="font-size:10px;letter-spacing:0.08em;color:#22d3ee;">
+    {% if status %}{{ status }}{% else %}Searching for cameras in {{ location }}...{% endif %}
+  </span>
+</div>

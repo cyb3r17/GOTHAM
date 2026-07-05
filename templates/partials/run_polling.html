@@ -1,0 +1,12 @@
+<div id="poll-status"
+     hx-get="/api/status/{{ task_id }}"
+     hx-trigger="every 2s"
+     hx-swap="outerHTML"
+     hx-target="this">
+  {% set stage = stage if stage is defined else 0 %}
+  {% set status = status if status is defined else 'Starting...' %}
+  <span class="status-running">
+    <span class="pulse-dot"></span>
+    {{ status }}{% if stage > 0 %} &mdash; step {{ [stage, 3] | min }}/3{% endif %}
+  </span>
+</div>

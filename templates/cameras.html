@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gotham · Camera Sweep</title>
+  <script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #080808;
+      --surface: #0f0f0f;
+      --border:  rgba(255,255,255,0.07);
+      --text:    #f1f5f9;
+      --muted:   rgba(255,255,255,0.35);
+      --cyan:    #22d3ee;
+    }
+    html { zoom: 1.33; }
+    html, body { min-height: 100%; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; height: 40px;
+      background: rgba(8,8,8,0.95); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 20px; gap: 14px; z-index: 200;
+    }
+    .nav-logo { font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; text-decoration: none; color: var(--text); }
+    .nav-sep  { width: 1px; height: 16px; background: var(--border); }
+    .nav-ctx  { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cyan); }
+    .nav-space { flex: 1; }
+    .nav-link { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); text-decoration: none; padding: 4px 10px; border: 1px solid transparent; transition: color .15s, border-color .15s; }
+    .nav-link:hover { color: var(--text); border-color: var(--border); }
+
+    /* LAYOUT */
+    .page { padding: 60px 28px 40px; max-width: 1200px; margin: 0 auto; }
+
+    /* CONTROL BAR */
+    .control-bar {
+      display: flex; align-items: stretch; gap: 0;
+      border: 1px solid var(--border); margin-bottom: 28px;
+      background: var(--surface);
+    }
+    .cb-label {
+      padding: 0 16px; font-size: 8px; font-weight: 700; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--muted); display: flex; align-items: center;
+      border-right: 1px solid var(--border); white-space: nowrap;
+    }
+    .cb-input {
+      flex: 1; background: transparent; border: none; outline: none;
+      font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text);
+      padding: 0 14px; height: 44px; min-width: 0;
+    }
+    .cb-input::placeholder { color: var(--muted); }
+    .cb-select {
+      background: transparent; border: none; border-left: 1px solid var(--border);
+      outline: none; font-family: 'Inter', sans-serif; font-size: 11px; color: var(--muted);
+      padding: 0 14px; height: 44px; cursor: pointer; min-width: 180px;
+    }
+    .cb-select option { background: #111; }
+    .cb-btn {
+      font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      background: var(--cyan); color: #080808; border: none;
+      padding: 0 24px; height: 44px; cursor: pointer; white-space: nowrap;
+      transition: opacity .15s;
+    }
+    .cb-btn:hover { opacity: 0.85; }
+    .cb-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* STATUS STRIP */
+    .status-strip {
+      margin-bottom: 20px; min-height: 24px;
+      font-size: 10px; letter-spacing: 0.08em; color: var(--muted);
+    }
+    .status-ok  { color: #4ade80; }
+    .status-err { color: #f87171; }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.35; transform: scale(0.7); }
+    }
+
+    /* CAMERA GRID */
+    .cam-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    /* CAMERA CARD */
+    .cam-card {
+      background: var(--surface); border: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .cam-feed {
+      width: 100%; aspect-ratio: 16/9; object-fit: cover;
+      background: #111; display: block; border-bottom: 1px solid var(--border);
+    }
+    .cam-feed-placeholder {
+      width: 100%; aspect-ratio: 16/9; background: #111;
+      display: flex; align-items: center; justify-content: center;
+      border-bottom: 1px solid var(--border);
+      font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.15);
+    }
+    .cam-meta { padding: 10px 12px; flex: 1; }
+    .cam-ip {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500;
+      color: var(--cyan); margin-bottom: 4px;
+    }
+    .cam-detail {
+      font-size: 9px; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 8px;
+    }
+    .cam-badge {
+      display: inline-block; font-size: 8px; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; padding: 2px 7px; margin-right: 4px; margin-bottom: 4px;
+    }
+    .badge-faces  { background: rgba(34,211,238,0.1);  color: var(--cyan); }
+    .badge-match  { background: rgba(74,222,128,0.1);  color: #4ade80; }
+    .badge-nomatch{ background: rgba(255,255,255,0.05); color: var(--muted); }
+    .badge-source { background: rgba(255,255,255,0.04); color: var(--muted); }
+
+    .cam-faces { margin-top: 8px; border-top: 1px solid var(--border); padding-top: 8px; }
+    .cam-face-row {
+      font-size: 9px; letter-spacing: 0.06em; color: var(--muted);
+      padding: 3px 0; display: flex; align-items: center; gap: 6px;
+    }
+    .cam-face-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--cyan); flex-shrink: 0; }
+    .cam-face-name { color: var(--text); }
+    .cam-sim-high { color: #4ade80; font-weight: 600; }
+    .cam-sim-low  { color: var(--muted); }
+
+    /* EMPTY STATE */
+    .empty-state {
+      text-align: center; padding: 80px 20px; color: var(--muted);
+    }
+    .empty-state svg { opacity: 0.15; margin-bottom: 14px; }
+    .empty-state p { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">Gotham</a>
+  <div class="nav-sep"></div>
+  <span class="nav-ctx">Camera Sweep</span>
+  <div class="nav-space"></div>
+  <a href="/dashboard" class="nav-link">Dashboard</a>
+  <a href="/logout" class="nav-link">Sign Out</a>
+</nav>
+
+<div class="page">
+
+  <form class="control-bar"
+        hx-post="/api/camera-sweep"
+        hx-target="#sweep-status"
+        hx-swap="innerHTML"
+        hx-indicator=".cb-btn">
+    <span class="cb-label">Location</span>
+    <input class="cb-input" name="location" placeholder="Bangalore, IN  ·  Tokyo, JP  ·  US  ·  Dubai" autocomplete="off" spellcheck="false" required/>
+    <span class="cb-label" style="border-left:1px solid var(--border);">Investigation</span>
+    <select class="cb-select" name="inv_id">
+      <option value="">— new investigation —</option>
+      {% for inv in investigations %}
+      <option value="{{ inv.id }}">{{ inv.name }}</option>
+      {% endfor %}
+    </select>
+    <button class="cb-btn" type="submit">Run Sweep</button>
+  </form>
+
+  <div class="status-strip" id="sweep-status"></div>
+  <div id="cam-results"></div>
+
+</div>
+
+</body>
+</html>

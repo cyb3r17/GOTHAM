@@ -1,0 +1,8 @@
+{% if error %}
+<span class="status-err">&#x26A0; {{ error }}</span>
+{% else %}
+<span class="status-ok">&#x2713; Found {{ count }} platform{{ 's' if count != 1 }} for <strong>{{ username }}</strong></span>
+{% endif %}
+
+{# Hidden element carrying the updated inv list — picked up by graphLoad event handler #}
+<div id="_inv_list_swap" style="display:none">{{ inv_list_html | safe }}</div>

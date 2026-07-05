@@ -1,0 +1,75 @@
+<div style="margin-bottom:16px;">
+  <span class="status-ok">&#x2713; Sweep complete &mdash; {{ count }} nodes added to investigation</span>
+  {% if inv_id %}
+  &nbsp;&nbsp;
+  <a href="/dashboard" style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.1);">
+    View in graph &rarr;
+  </a>
+  {% endif %}
+</div>
+
+{% if results %}
+<div class="cam-grid" id="cam-results">
+  {% for cam in results %}
+  <div class="cam-card">
+
+    {% if cam.stream_url %}
+    <img class="cam-feed" src="{{ cam.stream_url }}" alt="camera feed"
+         loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+    <div class="cam-feed-placeholder" style="display:none;">No feed</div>
+    {% else %}
+    <div class="cam-feed-placeholder">No feed available</div>
+    {% endif %}
+
+    <div class="cam-meta">
+      <div class="cam-ip">{{ cam.ip }}:{{ cam.port }}</div>
+      <div class="cam-detail">
+        {% if cam.city %}{{ cam.city }}{% if cam.country %}, {{ cam.country }}{% endif %} &nbsp;·&nbsp; {% endif %}
+        {{ cam.source | upper }}
+      </div>
+
+      <span class="cam-badge badge-source">{{ cam.source }}</span>
+
+      {% if cam.faces_detected %}
+      <span class="cam-badge badge-faces">{{ cam.faces_detected }} face{{ 's' if cam.faces_detected != 1 }}</span>
+      {% endif %}
+
+      {% if cam.subject_similarity %}
+        {% set sim = cam.subject_similarity | float %}
+        {% if sim > 0.55 %}
+        <span class="cam-badge badge-match">Subject match {{ (sim * 100) | int }}%</span>
+        {% endif %}
+      {% endif %}
+
+      {% if cam.face_matches %}
+      <div class="cam-faces">
+        {% for m in cam.face_matches[:4] %}
+        <div class="cam-face-row">
+          <span class="cam-face-dot"></span>
+          <span class="cam-face-name">
+            {{ m.get('name') or m.get('title') or m.get('url', 'Unknown')[:50] }}
+          </span>
+          {% if m.get('similarity') or m.get('score') %}
+          {% set s = (m.get('similarity') or m.get('score')) | float %}
+          <span class="{{ 'cam-sim-high' if s > 0.6 else 'cam-sim-low' }}">{{ (s * 100) | int }}%</span>
+          {% endif %}
+        </div>
+        {% endfor %}
+        {% if cam.face_matches | length > 4 %}
+        <div class="cam-face-row" style="color:rgba(255,255,255,0.2);">+{{ cam.face_matches | length - 4 }} more</div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+    <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+  </svg>
+  <p>No accessible cameras found for this location</p>
+</div>
+{% endif %}

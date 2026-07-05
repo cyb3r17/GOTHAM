@@ -1,0 +1,10 @@
+{% for inv in investigations %}
+<div class="inv-item {% if inv.id == active_id %}active{% endif %}"
+     data-id="{{ inv.id }}"
+     onclick="loadGraph({{ inv.id }})">
+  <span class="inv-name">{{ inv.name }}</span>
+  <span class="inv-date">{{ inv.created_at[:10] }}</span>
+</div>
+{% else %}
+<div class="inv-empty">No investigations yet.</div>
+{% endfor %}
