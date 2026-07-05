@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OSINT Profile Similarity</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #050506;
+        --panel: rgba(255,255,255,0.06);
+        --panel-strong: rgba(255,255,255,0.12);
+        --border: rgba(255,255,255,0.08);
+        --text: #f4f5f6;
+        --muted: #b0b3b8;
+        --accent: #8a8d61;
+        --accent-soft: rgba(138, 141, 97, 0.14);
+        --shadow: rgba(0, 0, 0, 0.35);
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; min-height: 100%; }
+      body {
+        font-family: 'Inter', sans-serif;
+        background: #050506;
+        color: var(--text);
+      }
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+        background-size: 48px 48px;
+        opacity: 0.18;
+        pointer-events: none;
+        z-index: 0;
+      }
+      .page { position: relative; z-index: 1; max-width: 1160px; margin: 0 auto; padding: 44px 24px 72px; }
+      .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+      .brand { font-size: 0.78rem; letter-spacing: 0.28em; color: var(--muted); font-weight: 700; text-transform: uppercase; }
+      .headline { max-width: 700px; }
+      .headline h1 { margin: 0; font-size: clamp(2rem, 4vw, 4rem); line-height: 0.95; font-weight: 700; }
+      .headline p { margin-top: 18px; max-width: 44rem; color: var(--muted); font-size: 1rem; line-height: 1.8; }
+      .pill-list { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+      .pill { display: inline-flex; align-items: center; padding: 10px 16px; border-radius: 999px; border: 1px solid var(--border); background: var(--panel); color: var(--text); font-size: 0.9rem; }
+      .layout { display: grid; gap: 24px; grid-template-columns: 1.05fr 0.95fr; align-items: start; }
+      .panel { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 28px; padding: 32px; backdrop-filter: blur(14px); box-shadow: 0 24px 55px var(--shadow); }
+      .panel h2 { margin: 0 0 16px; font-size: 0.92rem; color: var(--muted); letter-spacing: 0.18em; text-transform: uppercase; }
+      .field-grid { display: grid; gap: 20px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      label { display: block; margin-bottom: 10px; color: var(--muted); font-size: 0.88rem; letter-spacing: 0.05em; }
+      textarea { width: 100%; min-height: 220px; border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; background: rgba(255,255,255,0.03); color: var(--text); padding: 18px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 0.95rem; resize: vertical; }
+      textarea:focus { outline: 1px solid rgba(138, 141, 97, 0.35); border-color: rgba(255,255,255,0.12); }
+      .actions { margin-top: 24px; display: flex; justify-content: flex-start; }
+      .button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 24px; border-radius: 999px; border: none; background: linear-gradient(135deg, rgba(138,141,97,0.16), rgba(138,141,97,0.28)); color: var(--text); font-weight: 700; cursor: pointer; transition: transform 0.16s ease, box-shadow 0.16s ease; }
+      .button:hover { transform: translateY(-1px); box-shadow: 0 20px 32px rgba(138,141,97,0.18); }
+      .note { color: var(--muted); font-size: 0.95rem; line-height: 1.7; margin-top: 18px; }
+      .results { margin-top: 24px; }
+      .score-card { display: grid; gap: 10px; padding: 28px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); }
+      .score-title { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
+      .label { color: var(--muted); text-transform: uppercase; letter-spacing: 0.22em; font-size: 0.78rem; }
+      .value { font-size: clamp(2rem, 4vw, 3.4rem); font-weight: 700; color: var(--text); margin: 0; }
+      .metrics { margin-top: 22px; display: grid; gap: 14px; }
+      .metric { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 16px 20px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.025); }
+      .metric-name { color: var(--muted); text-transform: capitalize; font-size: 0.92rem; }
+      .metric-value { font-weight: 700; color: var(--text); }
+      @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } }
+      @media (max-width: 720px) { .page { padding: 28px 18px 60px; } .field-grid { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="topbar">
+        <div class="brand">OSINT</div>
+      </div>
+      <section class="headline">
+        <h1>Public profile similarity analysis.</h1>
+        <p>Submit two public profiles to receive a feature-based similarity score and breakdown.</p>
+      </section>
+      <section class="layout">
+        <div class="panel">
+          <h2>Compare profiles</h2>
+          <div class="field-grid">
+            <div>
+              <label for="profile1">Profile 1</label>
+              <textarea id="profile1">name: sachit (@sr71__)
+followers: 12
+following: 133
+posts: 2
+bio: 7\ Jack of All, Master of try SCE to AUX
+links: spikenets.substack.com, sachitrame.sh
+
+post1:
+--url: https://www.instagram.com/p/DaYunYyTFMJ/
+--date: July 04, 2026 (~1 hour ago at time of check)
+--caption: (none - no caption text found on post)
+--likes: 0 ("Be the first to like this")
+--description: Image/meme with hexagonal grid diagram labeled "Mi9", "T4d", "Dorsal", "Anterior" with numeric values (-8.2, -7.9, -2.9, -2.1, -1.1)
+
+post2:
+--url: https://www.instagram.com/p/DaYlvS1Tvc0/
+--date: ~3 hours ago at time of check
+--caption: (none - no caption text found on post)
+--likes: 1
+--description: Illustration of an orange character wearing a blue cap that reads "Please be patient I have claudism"</textarea>
+            </div>
+            <div>
+              <label for="profile2">Profile 2</label>
+              <textarea id="profile2">name: alex chen (@alexanalyst)
+followers: 98
+following: 120
+posts: 3
+bio: CS student in Bangalore, enjoys coffee and community coding.
+
+post1:
+--url: https://www.instagram.com/p/Example/
+--date: 2026-05-14T21:35:22
+--caption: Working on a data dashboard
+--likes: 4
+--description: Screenshot of a data dashboard</textarea>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="button" onclick="runComparison()">Compare profiles</button>
+            <button class="button" style="margin-left:12px; background:transparent; border:1px solid var(--border);" onclick="runStylometry()">Authorship check</button>
+          </div>
+          <p class="note">Paste two public profile dumps in the human-readable format (e.g. lines like "name:", "post1:", "--date:", "--caption:").</p>
+        </div>
+        <div class="panel results" id="results" style="display:none;">
+          <div class="score-card">
+            <div class="score-title">
+              <span class="label">Overall similarity</span>
+              <span class="value" id="overall">0.00</span>
+            </div>
+            <p class="note">The score is informative and not a conclusion about account ownership.</p>
+          </div>
+          <div class="metrics" id="metrics"></div>
+          <div id="stylometryResult" style="margin-top:18px; display:none;">
+            <div class="score-card">
+              <div class="score-title">
+                <span class="label">Stylometry (same author)</span>
+                <span class="value" id="stylometryScore">0.00</span>
+              </div>
+              <p class="note" id="stylometryNote"></p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <script>
+      async function runComparison() {
+        // Send raw pasted text to server for parsing (no client-side JSON.parse)
+        const raw1 = document.getElementById('profile1').value;
+        const raw2 = document.getElementById('profile2').value;
+        const response = await fetch('/compare', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ profile1: raw1, profile2: raw2 })
+        });
+        const data = await response.json();
+        document.getElementById('results').style.display = 'block';
+        document.getElementById('overall').textContent = `${data.overall_similarity.toFixed(2)} / 100`;
+        const metrics = document.getElementById('metrics');
+        metrics.innerHTML = '';
+        Object.entries(data.scores).forEach(([key, value]) => {
+          const row = document.createElement('div');
+          row.className = 'metric';
+          row.innerHTML = `<div class="metric-name">${key.replace(/_/g, ' ')}</div><div class="metric-value">${Number(value).toFixed(2)}</div>`;
+          metrics.appendChild(row);
+        });
+      }
+
+      async function runStylometry() {
+        const raw1 = document.getElementById('profile1').value;
+        const raw2 = document.getElementById('profile2').value;
+        const response = await fetch('/stylometry', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ profile1: raw1, profile2: raw2 })
+        });
+        const data = await response.json();
+        document.getElementById('results').style.display = 'block';
+        const el = document.getElementById('stylometryResult');
+        el.style.display = 'block';
+        document.getElementById('stylometryScore').textContent = `${(data.stylometry_score*100).toFixed(2)} / 100`;
+        document.getElementById('stylometryNote').textContent = data.reason || (data.note || '');
+      }
+    </script>
+  </body>
+</html>

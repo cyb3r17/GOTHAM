@@ -1,0 +1,28 @@
+{
+  "profile1": {
+    "username": "alex_analyst",
+    "display_name": "Alex Chen",
+    "bio": "Computer science student in Bangalore, loves coffee and open source.",
+    "captions": [
+      "Building a data dashboard",
+      "Coffee break before the next sprint",
+      "Weekend hackathon in Bangalore"
+    ],
+    "hashtags": ["#ai", "#opensource", "#coffee"],
+    "posting_times": ["2026-05-14T20:35:22", "2026-05-15T09:10:00", "2026-05-16T18:22:00"],
+    "profile_image": ""
+    },
+  "profile2": {
+    "username": "alexanalyst",
+    "display_name": "Alexander Chen",
+    "bio": "CS student in Bangalore, enjoys coffee and community coding.",
+    "captions": [
+      "Working on a data dashboard",
+      "Taking a coffee break before sprint",
+      "Hackathon weekend in Bangalore"
+    ],
+    "hashtags": ["#opensource", "#coffee", "#tech"],
+    "posting_times": ["2026-05-14T21:35:22", "2026-05-15T10:10:00", "2026-05-16T19:22:00"],
+    "profile_image": ""
+    }
+  }
